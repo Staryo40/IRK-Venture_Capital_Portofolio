@@ -2,6 +2,7 @@ plugins {
     application
     id("java")
     id("org.openjfx.javafxplugin") version "0.0.13"
+    kotlin("jvm")
 }
 
 group = "irk.staryo"
@@ -14,6 +15,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.test {
@@ -27,4 +29,7 @@ application {
 javafx {
     version = "21"
     modules = listOf("javafx.controls", "javafx.graphics")
+}
+kotlin {
+    jvmToolchain(21)
 }
