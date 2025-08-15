@@ -13,7 +13,8 @@ def generate_startup_data(amount):
         realistic = []
         optimistic = []
         
-        for _ in range(3): 
+        data_number = random.randint(30, 90)
+        for _ in range(data_number): 
             p = random.randint(0, ticket_size - 1) if ticket_size > 1 else 0
             r = random.randint(max(p + 1, 0), min(50, ticket_size + 10))
             o = random.randint(max(ticket_size + 1, r + 1), 50)
