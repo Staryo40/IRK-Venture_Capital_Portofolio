@@ -10,6 +10,4 @@ public class Startup {
     private String location;
     private Integer foundYear;
     private ProceedsScenarioTrend proceedsScenarioTrend;
-
-
 }
