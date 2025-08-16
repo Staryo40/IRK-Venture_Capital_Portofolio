@@ -88,5 +88,4 @@ public class DatabaseLoader {
             // ERROR CHECKING
         }
     }
-
 }

@@ -4,6 +4,7 @@ import com.sun.scenario.effect.impl.prism.PrImage;
 import irk.staryo.model.Startup;
 import irk.staryo.ui.common.MainContent;
 import irk.staryo.ui.common.TopBar;
+import irk.staryo.ui.deal_flow.DealFlow;
 import irk.staryo.utils.DatabaseLoader;
 import irk.staryo.utils.Repository;
 import javafx.application.Application;
@@ -21,21 +22,27 @@ import java.io.InputStream;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
+        // -------- SETUP --------
         DatabaseLoader.load();
-        for (Startup su : Repository.getInstance().getStartupList()){
-            System.out.println(su);
-        }
+        DealFlow.startups = Repository.getInstance().getSortedStartups();
+//        for (Startup su : Repository.getInstance().getStartupList()){
+//            System.out.println(su);
+//        }
+//        System.out.println("Map length: " + Repository.getInstance().getSectorColor().size());
 
+        // -------- ICON --------
         InputStream inputStream = getClass().getResourceAsStream("/images/VCPLogo.png");
         Image icon = new Image(inputStream);
         primaryStage.getIcons().add(icon);
 
+        // -------- Setting content --------
         HBox topBar  = TopBar.getTopBar(primaryStage);
         HBox mainContent = MainContent.getMainContent(primaryStage);
         BorderPane root = new BorderPane();
         root.setTop(topBar);
         root.setCenter(mainContent);
 
+        // -------- Screen Configuration --------
         double screenWidth = Screen.getPrimary().getVisualBounds().getWidth();
         double screenHeight = Screen.getPrimary().getVisualBounds().getHeight();
         Scene scene = new Scene(root, screenWidth * 0.8, screenHeight * 0.8);

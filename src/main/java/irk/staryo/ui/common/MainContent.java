@@ -1,8 +1,10 @@
 package irk.staryo.ui.common;
 
+import irk.staryo.ui.deal_flow.DealFlow;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -48,16 +50,16 @@ public class MainContent {
         leftPanel.getChildren().addAll(btnView1, btnView2);
 
         // Right Panel Sections
-        VBox view1 = new VBox(new Label("This is View 1"));
+        BorderPane dealFlow = DealFlow.getDealFlow(stage);
         VBox view2 = new VBox(new Label("This is View 2"));
-        rightPanel.getChildren().add(view1);
+        rightPanel.getChildren().add(dealFlow);
 
         // Button Styling
         Button[] buttons = {btnView1, btnView2};
 
         // Button Action
         btnView1.setOnAction(e -> {
-            rightPanel.getChildren().setAll(view1);
+            rightPanel.getChildren().setAll(dealFlow);
 
             for (Button btn : buttons) {
                 btn.getStyleClass().removeAll("main-button-on", "main-button-off");
