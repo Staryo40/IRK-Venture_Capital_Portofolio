@@ -2,6 +2,7 @@ package irk.staryo.ui.deal_flow;
 
 import irk.staryo.model.Startup;
 import irk.staryo.utils.Repository;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
@@ -27,7 +28,7 @@ public class DealFlow {
 
         // -------------------- TOP BAR --------------------
         HBox topBar = new HBox();
-        topBar.setPadding(new Insets(10));
+        topBar.setPadding(new Insets(20));
         topBar.setSpacing(20);
         topBar.setStyle("-fx-background-color: #FFFFFF;");
 
@@ -37,6 +38,7 @@ public class DealFlow {
 
         Text header = new Text("Deal Flow");
         header.setFont(Font.font("Arial", 24));
+        header.setStyle("-fx-font-weight: bold;");
 
         Text subText = new Text("Comprehensive database of all startups organized by sectors");
         subText.setFont(Font.font("Arial", 14));
@@ -63,7 +65,8 @@ public class DealFlow {
 
         // -------------------- MAIN CONTENT --------------------
         ScrollPane mainContent = new ScrollPane();
-        HBox content = new HBox(20);
+        HBox content = new HBox();
+        content.setFillHeight(false);
         content.setStyle("-fx-background-color: #FFFFFF;");
         content.setPadding(new Insets(10));
 
@@ -80,7 +83,7 @@ public class DealFlow {
         mainContent.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         mainContent.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         mainContent.setFitToWidth(false);
-        mainContent.setFitToHeight(false);
+        mainContent.setFitToHeight(true);
 
         dealFlow.setTop(topBar);
         dealFlow.setCenter(mainContent);
@@ -99,14 +102,39 @@ public class DealFlow {
         }
 
         // "Show All" button
-        Button showAllBtn = new Button("Show All");
-        showAllBtn.setOnAction(e -> {
-            for (CheckBox cb : sectorCheckboxes) cb.setSelected(true);
-            updateShownStartups(sectorCheckboxes, searchBar.getText(), content);
-        });
-        filterMenu.getItems().add(new CustomMenuItem(showAllBtn));
+//        Button showAllBtn = new Button("Show All");
+//        showAllBtn.setOnAction(e -> {
+//            for (CheckBox cb : sectorCheckboxes) cb.setSelected(true);
+//            updateShownStartups(sectorCheckboxes, searchBar.getText(), content);
+//        });
+//        filterMenu.getItems().add(new CustomMenuItem(showAllBtn));
 
-        filterButton.setOnAction(e -> filterMenu.show(filterButton, Side.BOTTOM, 0, 0));
+        filterButton.setOnAction(e -> {
+            filterMenu.getItems().clear();
+            sectorCheckboxes.clear();
+
+            for (String sector : startups.keySet()) {
+                CheckBox cb = new CheckBox(sector);
+                cb.setSelected(true);
+                CustomMenuItem item = new CustomMenuItem(cb);
+                item.setHideOnClick(false);
+                filterMenu.getItems().add(item);
+                sectorCheckboxes.add(cb);
+
+                cb.selectedProperty().addListener((obs, oldVal, newVal) ->
+                        updateShownStartups(sectorCheckboxes, searchBar.getText(), content)
+                );
+            }
+
+            Button showAllBtn = new Button("Show All");
+            showAllBtn.setOnAction(ev -> {
+                for (CheckBox cb : sectorCheckboxes) cb.setSelected(true);
+                updateShownStartups(sectorCheckboxes, searchBar.getText(), content);
+            });
+            filterMenu.getItems().add(new CustomMenuItem(showAllBtn));
+
+            filterMenu.show(filterButton, Side.BOTTOM, 0, 0);
+        });
 
         // -------------------- FILTER & SEARCH --------------------
         searchBar.textProperty().addListener((obs, oldVal, newVal) ->
@@ -152,7 +180,7 @@ public class DealFlow {
 
     private static VBox buildSectorBox(String sector, List<Startup> startups) {
         VBox sectorBox = new VBox(10);
-        sectorBox.setPrefWidth(250);
+        sectorBox.setPrefWidth(350);
 
         // Header with color + name
         HBox header = new HBox(5);
@@ -174,7 +202,7 @@ public class DealFlow {
 
     private static Button buildStartupCard(Startup s, Color accent) {
         Button card = new Button();
-        card.setPrefWidth(230);
+        card.setPrefWidth(330);
         card.setWrapText(true);
         card.setAlignment(Pos.TOP_LEFT);
         card.setStyle(
@@ -182,13 +210,20 @@ public class DealFlow {
                         "-fx-border-color: #CCCCCC;" +
                         "-fx-border-radius: 5;" +
                         "-fx-background-radius: 5;" +
-                        "-fx-padding: 10;"
+                        "-fx-padding: 10;" +
+                        "-fx-cursor: hand;"
         );
 
         HBox layout = new HBox(10);
 
         // Accent stripe
         Rectangle stripe = new Rectangle(5, 80, accent);
+        stripe.heightProperty().bind(
+                Bindings.createDoubleBinding(
+                        () -> layout.getHeight(), // Subtract padding from the HBox's height
+                        layout.heightProperty()
+                )
+        );
 
         // Info
         VBox info = new VBox(5);
@@ -202,7 +237,7 @@ public class DealFlow {
         details.setVgap(5);
 
         details.addRow(0, new Label("Funding:"), new Label(s.getFundingStage()));
-        details.addRow(1, new Label("Ticket:"), new Label(String.valueOf(s.getTicketSize())));
+        details.addRow(1, new Label("Ticket Size:"), new Label("$" + String.valueOf(s.getTicketSize()) + "M"));
         details.addRow(2, new Label("Location:"), new Label(s.getLocation()));
         details.addRow(3, new Label("Founded:"), new Label(String.valueOf(s.getFoundYear())));
 
