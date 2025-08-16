@@ -96,5 +96,4 @@ public class PmfCalculator {
         for (int i = 0; i < len; i++) p[i] /= total;
         return p;
     }
-
 }
