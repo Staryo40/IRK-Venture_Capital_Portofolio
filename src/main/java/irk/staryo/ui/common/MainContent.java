@@ -36,10 +36,10 @@ public class MainContent {
         Button btnView2 = new Button("Portofolio Construction");
 
         btnView1.setPadding(new Insets(8));
-        btnView1.setStyle("-fx-background-color: #FF7B00; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;");
+        btnView1.getStyleClass().add("main-button-on");
 
         btnView2.setPadding(new Insets(8));
-        btnView2.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;");
+        btnView2.getStyleClass().add("main-button-off");
 
         btnView1.setMaxWidth(Double.MAX_VALUE);
         btnView2.setMaxWidth(Double.MAX_VALUE);
@@ -54,24 +54,32 @@ public class MainContent {
 
         // Button Styling
         Button[] buttons = {btnView1, btnView2};
-        Button[] views = {btnView1, btnView2}; // dummy array, just for logic below
-        Runnable highlight = () -> {
-            for (Button btn : buttons) {
-                btn.setStyle("-fx-background-color: white; -fx-text-fill: black; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;");
-            }
-        };
 
         // Button Action
         btnView1.setOnAction(e -> {
             rightPanel.getChildren().setAll(view1);
-            highlight.run();
-            btnView1.setStyle("-fx-background-color: #FF7B00; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;");
+
+            for (Button btn : buttons) {
+                btn.getStyleClass().removeAll("main-button-on", "main-button-off");
+                if (btn == btnView1) {
+                    btn.getStyleClass().add("main-button-on");
+                } else {
+                    btn.getStyleClass().add("main-button-off");
+                }
+            }
         });
 
         btnView2.setOnAction(e -> {
             rightPanel.getChildren().setAll(view2);
-            highlight.run();
-            btnView2.setStyle("-fx-background-color: #FF7B00; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;");
+
+            for (Button btn : buttons) {
+                btn.getStyleClass().removeAll("main-button-on", "main-button-off");
+                if (btn == btnView2) {
+                    btn.getStyleClass().add("main-button-on");
+                } else {
+                    btn.getStyleClass().add("main-button-off");
+                }
+            }
         });
 
         mainContent.getChildren().addAll(leftPanel, rightPanel);

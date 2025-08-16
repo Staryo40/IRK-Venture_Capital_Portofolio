@@ -28,12 +28,12 @@ public class DatabaseLoader {
                 s.setName(doc.getString("name"));
                 s.setDescription(doc.getString("description"));
 
-                s.setFundingStage(FundingStage.valueOf(doc.getString("fundingStage")));
+                s.setFundingStage(doc.getString("fundingStage"));
 
                 s.setTicketSize(doc.getInteger("ticketSize"));
                 s.setLocation(doc.getString("location"));
                 s.setFoundYear(doc.getInteger("foundedYear"));
-
+                s.setSector(doc.getString("sector"));
                 Document trendDoc = doc.get("proceedsScenarioTrend", Document.class);
                 ProceedsScenarioTrend trend = new ProceedsScenarioTrend(
                         trendDoc.getList("Pessimistic", Integer.class),

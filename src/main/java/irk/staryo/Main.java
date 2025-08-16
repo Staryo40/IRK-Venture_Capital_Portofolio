@@ -22,9 +22,9 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         DatabaseLoader.load();
-//        for (Startup su : Repository.getInstance().getStartupList()){
-//            System.out.println(su);
-//        }
+        for (Startup su : Repository.getInstance().getStartupList()){
+            System.out.println(su);
+        }
 
         InputStream inputStream = getClass().getResourceAsStream("/images/VCPLogo.png");
         Image icon = new Image(inputStream);
@@ -39,6 +39,7 @@ public class Main extends Application {
         double screenWidth = Screen.getPrimary().getVisualBounds().getWidth();
         double screenHeight = Screen.getPrimary().getVisualBounds().getHeight();
         Scene scene = new Scene(root, screenWidth * 0.8, screenHeight * 0.8);
+        scene.getStylesheets().add(getClass().getResource("/styles.css").toExternalForm());
 
         primaryStage.setMaximized(true);
         primaryStage.setTitle("VCP Builder");

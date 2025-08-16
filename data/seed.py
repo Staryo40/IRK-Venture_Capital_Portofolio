@@ -2,7 +2,8 @@ import random
 import subprocess
 from pymongo import MongoClient
 
-FUNDING_STAGES = ["SEED", "SERIES_A", "SERIES_B", "SERIES_C", "SERIES_D_PLUS"]
+FUNDING_STAGES = ["SEED", "SERIES A", "SERIES B", "SERIES C", "SERIES D+"]
+SECTORS = ["FIN_TECH", "HEALTH_TECH", "ED_TECH", "GREEN_TECH", "FOOD_TECH", "PROP_TECH", "CYBERSECURITY", "GAMING", "SPACE_TECH", "AI/ML"]
 LOCATIONS = ["Jakarta, Indonesia", "Bandung, Indonesia", "Surabaya, Indonesia", "Bali, Indonesia", "Medan, Indonesia"]
 
 def generate_startup_data(amount):
@@ -29,6 +30,7 @@ def generate_startup_data(amount):
             "ticketSize": ticket_size,
             "location": random.choice(LOCATIONS),
             "foundedYear": random.randint(2000, 2025),
+            "sector": random.choice(SECTORS),
             "proceedsScenarioTrend": {
                 "Pessimistic": pessimistic,
                 "Realistic": realistic,
