@@ -9,11 +9,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 import java.util.List;
 
 public class SectorColumn {
-    public static VBox buildSectorColumn(String sector, List<Startup> startups){
+    public static VBox buildSectorColumn(String sector, List<Startup> startups, Stage stage){
         VBox sectorBox = new VBox(10);
         sectorBox.setPrefWidth(330);
 
@@ -28,7 +29,7 @@ public class SectorColumn {
 
         // Startups
         for (Startup s : startups) {
-            Button card = StartupItem.buildStartupButton(s, Repository.getInstance().getSectorColor().get(sector));
+            Button card = StartupItem.buildStartupButton(s, Repository.getInstance().getSectorColor().get(sector), stage);
             sectorBox.getChildren().add(card);
         }
 

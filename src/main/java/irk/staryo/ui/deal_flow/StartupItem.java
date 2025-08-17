@@ -7,6 +7,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -14,9 +15,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 
 public class StartupItem {
-    public static Button buildStartupButton(Startup s, Color accent){
+    public static Button buildStartupButton(Startup s, Color accent, Stage stage){
         Button card = new Button();
         card.setPrefWidth(310);
         card.setWrapText(true);
@@ -78,7 +80,21 @@ public class StartupItem {
         layout.getChildren().addAll(stripe, info);
         card.setGraphic(layout);
 
-        return card;
+        card.setOnAction(e -> {
+            navigateToStartupDetail(s, stage);
+        });
 
+        return card;
+    }
+
+    private static void navigateToStartupDetail(Startup startup, Stage stage) {
+        BorderPane mainScene = (BorderPane) stage.getScene().getRoot();
+        HBox mainContent = (HBox) mainScene.getCenter();
+
+        if (mainContent.getChildren().size() >= 2) {
+            VBox rightPanel = (VBox) mainContent.getChildren().get(1);
+            rightPanel.getChildren().clear();
+            rightPanel.getChildren().add(StartupDetail.getStartupDetail(startup, stage));
+        }
     }
 }

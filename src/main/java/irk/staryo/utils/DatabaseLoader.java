@@ -19,7 +19,7 @@ public class DatabaseLoader {
     public static Color[] distinctColors = {
             Color.RED,
             Color.ORANGE,
-            Color.YELLOW,
+            Color.DARKGOLDENROD,
             Color.GREEN,
             Color.BLUE,
             Color.INDIGO,
@@ -28,7 +28,7 @@ public class DatabaseLoader {
             Color.BROWN,
             Color.CORAL,
             Color.DARKCYAN,
-            Color.DARKGOLDENROD,
+            Color.YELLOW,
             Color.DARKMAGENTA,
             Color.DARKORANGE,
             Color.DARKSALMON,

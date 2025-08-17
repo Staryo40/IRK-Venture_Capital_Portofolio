@@ -139,7 +139,7 @@ public class DealFlow {
                 sectorCheckboxes.add(cb);
 
                 cb.selectedProperty().addListener((obs, oldVal, newVal) ->
-                        updateShownStartups(sectorCheckboxes, searchBar.getText(), content)
+                        updateShownStartups(sectorCheckboxes, searchBar.getText(), content, stage)
                 );
             }
 
@@ -147,7 +147,7 @@ public class DealFlow {
             showAllBtn.setStyle("-fx-cursor: hand;");
             showAllBtn.setOnAction(ev -> {
                 for (CheckBox cb : sectorCheckboxes) cb.setSelected(true);
-                updateShownStartups(sectorCheckboxes, searchBar.getText(), content);
+                updateShownStartups(sectorCheckboxes, searchBar.getText(), content, stage);
             });
             filterMenu.getItems().add(new CustomMenuItem(showAllBtn));
 
@@ -156,15 +156,15 @@ public class DealFlow {
 
         // -------------------- FILTER & SEARCH --------------------
         searchBar.textProperty().addListener((obs, oldVal, newVal) ->
-                updateShownStartups(sectorCheckboxes, newVal, content)
+                updateShownStartups(sectorCheckboxes, newVal, content, stage)
         );
 
-        updateShownStartups(sectorCheckboxes, "", content);
+        updateShownStartups(sectorCheckboxes, "", content, stage);
 
         return dealFlow;
     }
 
-    private static void updateShownStartups(List<CheckBox> sectorCheckboxes, String searchText, HBox content) {
+    private static void updateShownStartups(List<CheckBox> sectorCheckboxes, String searchText, HBox content, Stage stage) {
         shownStartups.clear();
 
         Set<String> activeSectors = sectorCheckboxes.stream()
@@ -188,7 +188,7 @@ public class DealFlow {
 
         content.getChildren().clear();
         for (Map.Entry<String, List<Startup>> entry : shownStartups.entrySet()) {
-            VBox sectorBox = SectorColumn.buildSectorColumn(entry.getKey(), entry.getValue());
+            VBox sectorBox = SectorColumn.buildSectorColumn(entry.getKey(), entry.getValue(), stage);
             content.getChildren().add(sectorBox);
         }
     }
