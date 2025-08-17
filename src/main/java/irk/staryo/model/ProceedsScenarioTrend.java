@@ -13,6 +13,30 @@ public class ProceedsScenarioTrend {
         this.optimistic = optimistic;
     }
 
+    public List<Integer> getOptimistic() {
+        return optimistic;
+    }
+
+    public void setOptimistic(List<Integer> optimistic) {
+        this.optimistic = optimistic;
+    }
+
+    public List<Integer> getPessimistic() {
+        return pessimistic;
+    }
+
+    public void setPessimistic(List<Integer> pessimistic) {
+        this.pessimistic = pessimistic;
+    }
+
+    public List<Integer> getRealistic() {
+        return realistic;
+    }
+
+    public void setRealistic(List<Integer> realistic) {
+        this.realistic = realistic;
+    }
+
     @Override
     public String toString() {
         return "ProceedsScenarioTrend{" +

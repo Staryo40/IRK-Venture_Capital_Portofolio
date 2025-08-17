@@ -1,5 +1,10 @@
 package irk.staryo.utils;
 
+import irk.staryo.model.DiscretePMF;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class PmfCalculator {
     public static double alpha(int pessimistic, int realistic, int optimistic){
         double num = realistic - pessimistic;
@@ -74,26 +79,32 @@ public class PmfCalculator {
         return sum * h / 3.0;
     }
 
-    public static double[] pmfFromPert(int pessimistic, int realistic, int optimistic) {
-        if (optimistic <= pessimistic) throw new IllegalArgumentException("optimistic must be greater than pessimistic");
+    public static DiscretePMF pmfFromPert(int pessimistic, int realistic, int optimistic) {
+        if (optimistic <= pessimistic) throw new IllegalArgumentException("Optimistic must be greater than pessimistic");
         double alpha = alpha(pessimistic, realistic, optimistic);
         double beta = beta(pessimistic, realistic, optimistic);
         int len = optimistic - pessimistic + 1;
-        double[] p = new double[len];
+
+        List<Double> p = new ArrayList<>(len);
         double total = 0.0;
+
         for (int k = pessimistic; k <= optimistic; k++) {
             double left = Math.max(pessimistic, k - 0.5);
-            double right = Math.min(pessimistic, k + 0.5);
+            double right = Math.min(optimistic, k + 0.5);
             double mass = integratePert(left, right, pessimistic, realistic, optimistic, alpha, beta);
-            p[k - pessimistic] = mass;
+            p.add(mass);
             total += mass;
         }
+
         if (total <= 0.0) {
-            for (int i = 0; i < len; i++) p[i] = 0.0;
-            if (realistic >= pessimistic && realistic <= optimistic) p[realistic - pessimistic] = 1.0; else p[0] = 1.0;
-            return p;
+            for (int i = 0; i < len; i++) p.set(i, 0.0);
+            if (realistic >= pessimistic && realistic <= optimistic) p.set(realistic - pessimistic, 1.0); else p.set(0, 1.0);
+            return new DiscretePMF(pessimistic, p);
         }
-        for (int i = 0; i < len; i++) p[i] /= total;
-        return p;
+
+        for (int i = 0; i < len; i++) {
+            p.set(i, p.get(i) / total);
+        }
+        return new DiscretePMF(pessimistic, p);
     }
 }

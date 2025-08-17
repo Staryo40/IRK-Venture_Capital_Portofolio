@@ -110,6 +110,7 @@ public class DealFlow {
 
         for (String sector : startups.keySet()) {
             CheckBox cb = new CheckBox(sector);
+            cb.setStyle("-fx-cursor: hand;");
             cb.setSelected(true);
             CustomMenuItem item = new CustomMenuItem(cb);
             item.setHideOnClick(false);
@@ -128,6 +129,7 @@ public class DealFlow {
 
             for (String sector : startups.keySet()) {
                 CheckBox cb = new CheckBox(sector);
+                cb.setStyle("-fx-cursor: hand;");
                 if (shownStartups.containsKey(sector)){
                     cb.setSelected(true);
                 }

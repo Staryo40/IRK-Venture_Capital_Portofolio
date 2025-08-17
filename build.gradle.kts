@@ -20,6 +20,7 @@ dependencies {
     implementation("org.kordamp.ikonli:ikonli-javafx:12.3.1")
     implementation("org.kordamp.ikonli:ikonli-fontawesome5-pack:12.3.1")
     implementation("org.kordamp.ikonli:ikonli-materialdesign-pack:12.3.1")
+    implementation("org.apache.commons:commons-math3:3.6.1")
 }
 
 tasks.test {
