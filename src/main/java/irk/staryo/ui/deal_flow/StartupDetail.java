@@ -4,6 +4,7 @@ import irk.staryo.model.DiscretePMF;
 import irk.staryo.model.ProceedsScenarioTrend;
 import irk.staryo.model.Startup;
 import irk.staryo.utils.PmfCalculator;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -26,11 +27,13 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StartupDetail {
     private static Startup currentStartup;
     private static BarChart<String, Number> probabilityChart;
-    private static LineChart<Number, Number> trendsChart;
+    private static LineChart<String, Number> trendsChart;
     private static Label pessimisticValue;
     private static Label realisticValue;
     private static Label optimisticValue;
@@ -226,53 +229,60 @@ public class StartupDetail {
         return trendsBox;
     }
 
-    private static LineChart<Number, Number> createTrendsChart(Startup startup) {
-        NumberAxis xAxis = new NumberAxis();
+    private static LineChart<String, Number> createTrendsChart(Startup startup) {
+        CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
-        xAxis.setLabel("Days Ago");
+        xAxis.setLabel("Date");
+        xAxis.setTickLabelRotation(-30);
         yAxis.setLabel("Proceeds (Millions USD)");
 
-        LineChart<Number, Number> chart = new LineChart<>(xAxis, yAxis);
+        LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
         chart.setTitle("Proceeds Trends");
         chart.setPrefHeight(400);
         chart.setCreateSymbols(true);
 
         ProceedsScenarioTrend trend = startup.getProceedsScenarioTrend();
 
-        XYChart.Series<Number, Number> pessimisticSeries = new XYChart.Series<>();
+        XYChart.Series<String, Number> pessimisticSeries = new XYChart.Series<>();
         pessimisticSeries.setName("Pessimistic");
 
-        XYChart.Series<Number, Number> realisticSeries = new XYChart.Series<>();
+        XYChart.Series<String, Number> realisticSeries = new XYChart.Series<>();
         realisticSeries.setName("Realistic");
 
-        XYChart.Series<Number, Number> optimisticSeries = new XYChart.Series<>();
+        XYChart.Series<String, Number> optimisticSeries = new XYChart.Series<>();
         optimisticSeries.setName("Optimistic");
+
+        LocalDate baseDate = LocalDate.of(2025, 8, 4);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM");
+        List<String> categories = new ArrayList<>();
 
         for (int i = 0; i < trend.getPessimistic().size(); i++) {
             int daysAgo = trend.getPessimistic().size() - 1 - i;
-            pessimisticSeries.getData().add(new XYChart.Data<>(daysAgo, trend.getPessimistic().get(i)));
-            realisticSeries.getData().add(new XYChart.Data<>(daysAgo, trend.getRealistic().get(i)));
-            optimisticSeries.getData().add(new XYChart.Data<>(daysAgo, trend.getOptimistic().get(i)));
+            LocalDate date = baseDate.minusDays(daysAgo);
+            String label = date.format(formatter);
+            categories.add(label);
+
+            pessimisticSeries.getData().add(new XYChart.Data<>(label, trend.getPessimistic().get(i)));
+            realisticSeries.getData().add(new XYChart.Data<>(label, trend.getRealistic().get(i)));
+            optimisticSeries.getData().add(new XYChart.Data<>(label, trend.getOptimistic().get(i)));
         }
+
+        xAxis.setCategories(FXCollections.observableArrayList(categories));
 
         chart.getData().addAll(pessimisticSeries, realisticSeries, optimisticSeries);
         chart.setStyle("-fx-cursor: hand;");
 
         chart.setOnMouseClicked(e -> {
-            NumberAxis xAxisNode = (NumberAxis) chart.getXAxis();
-            Point2D mouseScene = new Point2D(e.getSceneX(), e.getSceneY());
-            Point2D mouseInXAxis = xAxisNode.sceneToLocal(mouseScene);
+            double x = e.getX();
+            double widthPerCategory = chart.getXAxis().getWidth() / categories.size();
+            int clickedIndex = trend.getPessimistic().size() - 1 - (int) Math.floor(x / widthPerCategory) + 3;
 
-            double xValue = xAxisNode.getValueForDisplay(mouseInXAxis.getX()).doubleValue();
+            clickedIndex = Math.max(0, Math.min(trend.getPessimistic().size() - 1, clickedIndex));
 
-            // Find the closest day index
-            int closestDayIndex = (int) Math.round(trend.getPessimistic().size() - 1 - xValue);
-            closestDayIndex = Math.max(0, Math.min(trend.getPessimistic().size() - 1, closestDayIndex));
-
-            if (closestDayIndex != selectedDayIndex) {
+            if (clickedIndex != selectedDayIndex) {
                 clearDataPointHighlights(chart);
-                selectedDayIndex = closestDayIndex;
-                highlightDataPoints(chart, selectedDayIndex, trend.getPessimistic().size());
+                selectedDayIndex = clickedIndex;
+                highlightDataPoints(chart, selectedDayIndex, trend.getPessimistic().size(), categories);
                 updateGPSData(selectedDayIndex);
             }
         });
@@ -333,20 +343,20 @@ public class StartupDetail {
         probabilityChart.getData().add(series);
     }
 
-    private static void clearDataPointHighlights(LineChart<Number, Number> chart) {
+    private static void clearDataPointHighlights(LineChart<String, Number> chart) {
         chart.lookupAll(".chart-line-symbol").forEach(node -> {
             node.setStyle("-fx-background-radius: 3px; -fx-padding: 3px;");
         });
     }
 
-    private static void highlightDataPoints(LineChart<Number, Number> chart, int dayIndex, int totalDays) {
-        double targetXValue = totalDays - 1 - dayIndex;
+    private static void highlightDataPoints(LineChart<String, Number> chart, int dayIndex, int totalDays, List<String> categories) {
+        String targetCategory = categories.get(totalDays - 1 - dayIndex);
 
         for (int seriesIndex = 0; seriesIndex < chart.getData().size(); seriesIndex++) {
-            XYChart.Series<Number, Number> series = chart.getData().get(seriesIndex);
+            XYChart.Series<String, Number> series = chart.getData().get(seriesIndex);
 
-            for (XYChart.Data<Number, Number> dataPoint : series.getData()) {
-                if (Math.abs(dataPoint.getXValue().doubleValue() - targetXValue) < 0.1) {
+            for (XYChart.Data<String, Number> dataPoint : series.getData()) {
+                if (dataPoint.getXValue().equals(targetCategory)) {
                     String highlightColor;
                     if (seriesIndex == 0) {
                         highlightColor = "#CC0000";
