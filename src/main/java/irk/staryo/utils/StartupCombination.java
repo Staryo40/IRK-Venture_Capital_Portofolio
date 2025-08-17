@@ -7,15 +7,21 @@ import irk.staryo.model.StartupPMF;
 import java.util.*;
 
 public class StartupCombination {
-    public static Map<Startup, Integer> generateStartupIndex(List<Startup> startups, Integer dateIndex) throws Exception {
-        Map<Startup, Integer> startupIndex = new HashMap<>();
-        Integer index = 0;
+    public static boolean checkValidStartupDate(List<Startup> startups, Integer dateIndex){
         for (Startup s : startups) {
             int curDateIndex = s.getProceedsScenarioTrend().getOptimistic().size() - 1;
             if (Math.abs(dateIndex) > curDateIndex){
-                throw new Exception("Startup " + s.getName() + " does not have P/R/O data for " + Math.abs(dateIndex) + " days ago");
+                return false;
             }
+        }
 
+        return true;
+    }
+
+    public static Map<Startup, Integer> generateStartupIndex(List<Startup> startups) {
+        Map<Startup, Integer> startupIndex = new HashMap<>();
+        Integer index = 0;
+        for (Startup s : startups) {
             startupIndex.put(s, index);
             index++;
         }
@@ -30,31 +36,38 @@ public class StartupCombination {
     }
 
     private static void generateCombinationsHelper(List<Startup> startups, int index, List<Startup> current, int currentCost, Set<String> usedSectors, int costLimit, List<List<Startup>> result) {
-        boolean canAddMore = false;
-
         for (int i = index; i < startups.size(); i++) {
             Startup s = startups.get(i);
-
             if (currentCost + s.getTicketSize() > costLimit) continue;
             if (usedSectors.contains(s.getSector())) continue;
 
-            canAddMore = true;
-
             current.add(s);
             usedSectors.add(s.getSector());
+
             generateCombinationsHelper(startups, i + 1, current, currentCost + s.getTicketSize(), usedSectors, costLimit, result);
+
             current.remove(current.size() - 1);
             usedSectors.remove(s.getSector());
         }
 
-        if (!current.isEmpty() && !canAddMore) {
-            result.add(new ArrayList<>(current));
+        if (!current.isEmpty()) {
+            boolean canExtendGlobally = false;
+            for (Startup s : startups) {
+                if (usedSectors.contains(s.getSector())) continue;
+                if (currentCost + s.getTicketSize() <= costLimit) {
+                    canExtendGlobally = true;
+                    break;
+                }
+            }
+            if (!canExtendGlobally) {
+                result.add(new ArrayList<>(current));
+            }
         }
     }
 
-    public static List<String> generateCombinationBitmasks(List<Startup> startups, int costLimit, int dateIndex) throws Exception {
+    public static List<String> generateCombinationBitmasks(List<Startup> startups, int costLimit) {
         List<List<Startup>> validCombinations = generateCombinations(startups, costLimit);
-        Map<Startup, Integer> startupIndex = generateStartupIndex(startups, dateIndex);
+        Map<Startup, Integer> startupIndex = generateStartupIndex(startups);
 
         int bitMaskLength = startups.size();
         List<String> result = new ArrayList<>();
