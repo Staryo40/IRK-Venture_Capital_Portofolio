@@ -55,4 +55,18 @@ public class StringBitOperation {
 
         return indexlist;
     }
+
+    public static String indexToStringbit(int index, int length){
+        assert index < length : "Index needs to be smaller than length in Stringbit indexToStringbit";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++){
+            if (i == index){
+                sb.append('1');
+            } else {
+                sb.append('0');
+            }
+        }
+
+        return sb.toString();
+    }
 }

@@ -1,24 +1,11 @@
 package irk.staryo.utils;
 
-import irk.staryo.model.DiscretePMF;
 import irk.staryo.model.FilteredStringbitStartups;
 import irk.staryo.model.Startup;
-import irk.staryo.model.StartupPMF;
 
 import java.util.*;
 
 public class StartupCombination {
-    public static boolean checkValidStartupDate(List<Startup> startups, Integer dateIndex){
-        for (Startup s : startups) {
-            int curDateIndex = s.getProceedsScenarioTrend().getOptimistic().size() - 1;
-            if (Math.abs(dateIndex) > curDateIndex){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public static Map<Startup, Integer> generateStartupIndex(List<Startup> startups) {
         Map<Startup, Integer> startupIndex = new HashMap<>();
         Integer index = 0;
@@ -47,7 +34,7 @@ public class StartupCombination {
 
             generateCombinationsHelper(startups, i + 1, current, currentCost + s.getTicketSize(), usedSectors, costLimit, result);
 
-            current.remove(current.size() - 1);
+            current.removeLast();
             usedSectors.remove(s.getSector());
         }
 
