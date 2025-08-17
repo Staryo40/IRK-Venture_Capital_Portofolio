@@ -5,6 +5,7 @@ import irk.staryo.model.ProceedsScenarioTrend;
 import irk.staryo.model.Startup;
 import irk.staryo.utils.PmfCalculator;
 import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
@@ -139,35 +140,30 @@ public class StartupDetail {
         gpsBox.setPadding(new Insets(20));
         gpsBox.setStyle("-fx-border-color: #CCCCCC; -fx-border-radius: 10; -fx-background-radius: 10;");
 
-        // Title
+        // -------------------- Title --------------------
         gpsTitle = new Label();
         gpsTitle.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         updateGPSTitle(0);
 
-        // Scenario boxes
+        // -------------------- Scenarios --------------------
         HBox scenarioBoxes = new HBox(20);
         scenarioBoxes.setAlignment(Pos.CENTER);
 
-        // Pessimistic box (Red)
         VBox pessimisticBox = createScenarioBox("Pessimistic", "#FFE6E6", "#CC0000");
         pessimisticValue = (Label) ((VBox) pessimisticBox.getChildren().getFirst()).getChildren().get(1);
 
-        // Realistic box (Orange)
         VBox realisticBox = createScenarioBox("Realistic", "#FFF2E6", "#FF8800");
         realisticValue = (Label) ((VBox) realisticBox.getChildren().getFirst()).getChildren().get(1);
 
-        // Optimistic box (Green)
         VBox optimisticBox = createScenarioBox("Optimistic", "#E6F7E6", "#00AA00");
         optimisticValue = (Label) ((VBox) optimisticBox.getChildren().getFirst()).getChildren().get(1);
 
         scenarioBoxes.getChildren().addAll(pessimisticBox, realisticBox, optimisticBox);
 
-        // Probability Distribution Title
+        // -------------------- PROBABILITY DISTRIBUTION --------------------
         Label probTitle = new Label("Probability Distribution");
         probTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         probTitle.setPadding(new Insets(10, 0, 0, 0));
-
-        // Probability Chart
         probabilityChart = createProbabilityChart();
 
         gpsBox.getChildren().addAll(gpsTitle, scenarioBoxes, probTitle, probabilityChart);
@@ -224,10 +220,7 @@ public class StartupDetail {
 
         Label trendsTitle = new Label("Proceeds Trends - Last " + daysCount + " Days");
         trendsTitle.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-
-        // Create trends chart
         trendsChart = createTrendsChart(startup);
-
         trendsBox.getChildren().addAll(trendsTitle, trendsChart);
 
         return trendsBox;
@@ -246,19 +239,15 @@ public class StartupDetail {
 
         ProceedsScenarioTrend trend = startup.getProceedsScenarioTrend();
 
-        // Pessimistic series (Red)
         XYChart.Series<Number, Number> pessimisticSeries = new XYChart.Series<>();
         pessimisticSeries.setName("Pessimistic");
 
-        // Realistic series (Orange)
         XYChart.Series<Number, Number> realisticSeries = new XYChart.Series<>();
         realisticSeries.setName("Realistic");
 
-        // Optimistic series (Green)
         XYChart.Series<Number, Number> optimisticSeries = new XYChart.Series<>();
         optimisticSeries.setName("Optimistic");
 
-        // Add data points
         for (int i = 0; i < trend.getPessimistic().size(); i++) {
             int daysAgo = trend.getPessimistic().size() - 1 - i;
             pessimisticSeries.getData().add(new XYChart.Data<>(daysAgo, trend.getPessimistic().get(i)));
@@ -267,13 +256,25 @@ public class StartupDetail {
         }
 
         chart.getData().addAll(pessimisticSeries, realisticSeries, optimisticSeries);
+        chart.setStyle("-fx-cursor: hand;");
 
-        // Add click listener to chart for day selection
         chart.setOnMouseClicked(e -> {
-            // This is a simplified version - you'd need more complex logic to detect which data point was clicked
-            // For now, we'll just cycle through days on click
-            selectedDayIndex = (selectedDayIndex + 1) % trend.getPessimistic().size();
-            updateGPSData(selectedDayIndex);
+            NumberAxis xAxisNode = (NumberAxis) chart.getXAxis();
+            Point2D mouseScene = new Point2D(e.getSceneX(), e.getSceneY());
+            Point2D mouseInXAxis = xAxisNode.sceneToLocal(mouseScene);
+
+            double xValue = xAxisNode.getValueForDisplay(mouseInXAxis.getX()).doubleValue();
+
+            // Find the closest day index
+            int closestDayIndex = (int) Math.round(trend.getPessimistic().size() - 1 - xValue);
+            closestDayIndex = Math.max(0, Math.min(trend.getPessimistic().size() - 1, closestDayIndex));
+
+            if (closestDayIndex != selectedDayIndex) {
+                clearDataPointHighlights(chart);
+                selectedDayIndex = closestDayIndex;
+                highlightDataPoints(chart, selectedDayIndex, trend.getPessimistic().size());
+                updateGPSData(selectedDayIndex);
+            }
         });
 
         // Style the lines
@@ -295,19 +296,17 @@ public class StartupDetail {
         selectedDayIndex = dayIndex;
         ProceedsScenarioTrend trend = currentStartup.getProceedsScenarioTrend();
 
-        // Update title with selected date
+        int arrayIndex = (trend.getPessimistic().size() - 1) - dayIndex;
+
         updateGPSTitle(dayIndex);
+        pessimisticValue.setText(trend.getPessimistic().get(arrayIndex) + "M");
+        realisticValue.setText(trend.getRealistic().get(arrayIndex) + "M");
+        optimisticValue.setText(trend.getOptimistic().get(arrayIndex) + "M");
 
-        // Update scenario values
-        pessimisticValue.setText(trend.getPessimistic().get(dayIndex) + "M");
-        realisticValue.setText(trend.getRealistic().get(dayIndex) + "M");
-        optimisticValue.setText(trend.getOptimistic().get(dayIndex) + "M");
-
-        // Update probability distribution chart
         updateProbabilityChart(
-                trend.getPessimistic().get(dayIndex),
-                trend.getRealistic().get(dayIndex),
-                trend.getOptimistic().get(dayIndex)
+                trend.getPessimistic().get(arrayIndex),
+                trend.getRealistic().get(arrayIndex),
+                trend.getOptimistic().get(arrayIndex)
         );
     }
 
@@ -322,6 +321,7 @@ public class StartupDetail {
         DiscretePMF pmf = PmfCalculator.pmfFromPert(pessimistic, realistic, optimistic);
 
         probabilityChart.getData().clear();
+        probabilityChart.setAnimated(false);
         XYChart.Series<String, Number> series = new XYChart.Series<>();
 
         for (int i = 0; i < pmf.p.size(); i++) {
@@ -330,12 +330,48 @@ public class StartupDetail {
             series.getData().add(new XYChart.Data<>(String.valueOf(value), probability));
         }
 
-
         probabilityChart.getData().add(series);
     }
 
+    private static void clearDataPointHighlights(LineChart<Number, Number> chart) {
+        chart.lookupAll(".chart-line-symbol").forEach(node -> {
+            node.setStyle("-fx-background-radius: 3px; -fx-padding: 3px;");
+        });
+    }
+
+    private static void highlightDataPoints(LineChart<Number, Number> chart, int dayIndex, int totalDays) {
+        double targetXValue = totalDays - 1 - dayIndex;
+
+        for (int seriesIndex = 0; seriesIndex < chart.getData().size(); seriesIndex++) {
+            XYChart.Series<Number, Number> series = chart.getData().get(seriesIndex);
+
+            for (XYChart.Data<Number, Number> dataPoint : series.getData()) {
+                if (Math.abs(dataPoint.getXValue().doubleValue() - targetXValue) < 0.1) {
+                    String highlightColor;
+                    if (seriesIndex == 0) {
+                        highlightColor = "#CC0000";
+                    } else if (seriesIndex == 1) {
+                        highlightColor = "#FF8800";
+                    } else {
+                        highlightColor = "#00AA00";
+                    }
+
+                    if (dataPoint.getNode() != null) {
+                        dataPoint.getNode().setStyle(
+                                "-fx-background-color: " + highlightColor + ";" +
+                                        "-fx-background-radius: 4px;" +
+                                        "-fx-padding: 4px;" +
+                                        "-fx-border-color: white;" +
+                                        "-fx-border-width: 2px;" +
+                                        "-fx-border-radius: 4px;"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     private static void navigateBackToDealFlow(Stage stage) {
-        // Find the main content structure and navigate back to deal flow
         BorderPane mainScene = (BorderPane) stage.getScene().getRoot();
         HBox mainContent = (HBox) mainScene.getCenter();
 
