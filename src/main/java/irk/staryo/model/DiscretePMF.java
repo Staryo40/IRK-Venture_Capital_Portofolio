@@ -25,6 +25,16 @@ public class DiscretePMF {
         return cumulativeChance;
     }
 
+    public Double expectedGain(){
+        int current = min;
+        Double total = 0.0;
+        for (int i = 0; i < p.size(); i++){
+            total += current * p.get(i);
+            current++;
+        }
+        return total;
+    }
+
     @Override
     public String toString() {
         String result = "DiscretePMF{\n";
