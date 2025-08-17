@@ -19,6 +19,45 @@ public class ConvolutionCalculator {
         return n;
     }
 
+    public static void fft(Complex[] a, boolean inverse) {
+        int n = a.length;
+
+        // Bit-reversal permutation
+        for (int i = 1, j = 0; i < n; i++) {
+            int bit = n >> 1;
+            for (; j >= bit; bit >>= 1) j -= bit;
+            j += bit;
+            if (i < j) {
+                Complex tmp = a[i];
+                a[i] = a[j];
+                a[j] = tmp;
+            }
+        }
+
+        // Cooley–Tukey
+        for (int len = 2; len <= n; len <<= 1) {
+            double ang = 2 * Math.PI / len * (inverse ? -1 : 1);
+            Complex wlen = new Complex(Math.cos(ang), Math.sin(ang));
+            for (int i = 0; i < n; i += len) {
+                Complex w = new Complex(1.0, 0.0);
+                for (int j = 0; j < len / 2; j++) {
+                    Complex u = a[i + j];
+                    Complex v = a[i + j + len / 2].multiply(w);
+                    a[i + j] = u.add(v);
+                    a[i + j + len / 2] = u.subtract(v);
+                    w = w.multiply(wlen);
+                }
+            }
+        }
+
+        // Scale if inverse
+        if (inverse) {
+            for (int i = 0; i < n; i++) {
+                a[i] = a[i].divide(n);
+            }
+        }
+    }
+
     /**
      * Result represents (aMin+bMin)..(aMax+bMax)
      * FFT OVERHEAD:
@@ -45,27 +84,32 @@ public class ConvolutionCalculator {
             B[i] = new Complex(i < nb ? bPMF.p.get(i) : 0.0, 0.0);
         }
 
-        // Forward FFT (STANDARD normalization: forward unscaled, inverse scaled by 1/n)
-        Complex[] FA = FFT.transform(A, TransformType.FORWARD);
-        Complex[] FB = FFT.transform(B, TransformType.FORWARD);
+        // Forward FFT
+        fft(A, false);
+        fft(B, false);
 
+        // Pointwise multiply
         Complex[] FC = new Complex[n];
-        for (int i = 0; i < n; i++) FC[i] = FA[i].multiply(FB[i]);
+        for (int i = 0; i < n; i++) FC[i] = A[i].multiply(B[i]);
 
-        Complex[] C = FFT.transform(FC, TransformType.INVERSE);
+        // Inverse FFT
+        fft(FC, true);
 
+        // Collect result
         List<Double> out = new ArrayList<>(outLen);
         for (int i = 0; i < outLen; i++) {
-            double val = C[i].getReal();
+            double val = FC[i].getReal();
             if (val < 0 && val > -1e-15) val = 0.0;
             out.add(val);
         }
 
-        // Renormalize to sum=1
+        // Normalize to sum = 1
         double sum = 0.0;
         for (double v : out) sum += v;
         if (sum > 0) {
-            for (int i = 0; i < out.size(); i++) out.set(i, out.get(i) / sum);
+            for (int i = 0; i < out.size(); i++) {
+                out.set(i, out.get(i) / sum);
+            }
         }
 
         int combinedMin = aPMF.min + bPMF.min;
