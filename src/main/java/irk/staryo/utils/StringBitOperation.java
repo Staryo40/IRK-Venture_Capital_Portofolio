@@ -42,4 +42,17 @@ public class StringBitOperation {
         }
         return lowerOrderSubsets;
     }
+
+    public static List<Integer> toIndexList(String s){
+        List<Integer> indexlist = new ArrayList<>();
+        char[] chars = s.toCharArray();
+
+        for (int i = 0; i < chars.length; i++){
+            if (chars[i] == '1'){
+                indexlist.add(i);
+            }
+        }
+
+        return indexlist;
+    }
 }

@@ -1,6 +1,7 @@
 package irk.staryo.utils;
 
 import irk.staryo.model.DiscretePMF;
+import irk.staryo.model.FilteredStringbitStartups;
 import irk.staryo.model.Startup;
 import irk.staryo.model.StartupPMF;
 
@@ -65,7 +66,9 @@ public class StartupCombination {
         }
     }
 
-    public static List<String> generateCombinationBitmasks(List<Startup> startups, int costLimit) {
+    // Also filters via sector and ticket size limit
+    public static FilteredStringbitStartups generateCombinationBitmasks(List<Startup> startups, int costLimit) {
+        assert !startups.isEmpty() : "Startup list cannot be empty to produce sector/ticket size combinations";
         List<List<Startup>> validCombinations = generateCombinations(startups, costLimit);
         Map<Startup, Integer> startupIndex = generateStartupIndex(startups);
 
@@ -81,8 +84,34 @@ public class StartupCombination {
             result.add(mask.toString());
         }
 
-        return result;
+        return new FilteredStringbitStartups(result, MapUtils.reverseMap(startupIndex));
     }
 
+    // Target is a negative integer expressing the index of the day before 4 August 2025
+    public static FilteredStringbitStartups filterTargetBased(List<Startup> startups, int costLimit, int target) throws Exception {
+        assert !startups.isEmpty() : "Startup list cannot be empty to produce target combinations";
+        FilteredStringbitStartups sectorCostFiltered = generateCombinationBitmasks(startups, costLimit);
+        List<String> stringBitList = sectorCostFiltered.getStringBits();
+        Map<Integer, Startup> startupMapping = sectorCostFiltered.getStartupMap();
 
+        for (String s : stringBitList) {
+            List<Integer> indexList = StringBitOperation.toIndexList(s);
+            int cumulativeMax = 0;
+            for (Integer i : indexList){
+                Startup current = startupMapping.get(i);
+                int listN = current.getProceedsScenarioTrend().getOptimistic().size() - 1;
+                if (Math.abs(target) > listN){
+                    throw new Exception("Startup " + current.getName() + " does not have P/R/O for " + Math.abs(target) + " days ago");
+                }
+                int index = listN + target;
+                cumulativeMax += current.getProceedsScenarioTrend().getOptimistic().get(index);
+            }
+
+            if (cumulativeMax < target){
+                stringBitList.remove(s);
+            }
+        }
+
+        return new FilteredStringbitStartups(stringBitList, startupMapping);
+    }
 }
