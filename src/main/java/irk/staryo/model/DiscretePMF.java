@@ -13,6 +13,18 @@ public class DiscretePMF {
         this.max = min + p.size() - 1;
     }
 
+    public Double chanceFromMinimum(int target){
+        if (target > max) return 0.0;
+        int start = Math.max(min, target);
+        int startId = start - min;
+
+        Double cumulativeChance = 0.0;
+        for (int i = startId; i <= p.size()-1; i++){
+            cumulativeChance += p.get(i);
+        }
+        return cumulativeChance;
+    }
+
     @Override
     public String toString() {
         String result = "DiscretePMF{\n";

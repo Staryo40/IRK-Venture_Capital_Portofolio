@@ -69,4 +69,29 @@ public class StringBitOperation {
 
         return sb.toString();
     }
+
+    public static String complement(String bountiful, String lesser){
+        assert bountiful.length() == lesser.length() : "Both bit string needs to be the same length";
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < bountiful.length(); i++){
+            if (bountiful.charAt(i) == '1' && lesser.charAt(i) == '0'){
+                sb.append('1');
+            } else {
+                sb.append('0');
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public static String emptyStringBitN(Integer n){
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < n; i++){
+            sb.append('0');
+        }
+
+        return sb.toString();
+    }
 }
