@@ -21,3 +21,29 @@
     -fx-background-radius: 10;
     -fx-border-radius: 10;
 }
+
+.regular-button-off {
+    -fx-background-color: #EEEEEE;
+    -fx-text-fill: black;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.regular-button-off .button-icon {
+    -fx-fill: black;
+}
+
+.regular-button-on {
+    -fx-background-color: #FF7B00;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.regular-button-on .button-icon {
+    -fx-fill: white;
+}

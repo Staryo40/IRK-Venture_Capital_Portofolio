@@ -55,8 +55,13 @@ public class DealFlow {
         searchBar.setPrefHeight(40);
         searchBar.setPrefWidth(200);
 
-        Button filterButton = new Button("Filter");
-        filterButton.setGraphic(new FontIcon("mdi-filter"));
+        Button filterButton = new Button();
+        FontIcon filterIcon = new FontIcon("mdi-filter");
+        filterIcon.getStyleClass().add("button-icon");
+        filterButton.setGraphic(filterIcon);
+        filterButton.getStyleClass().add("regular-button-off");
+        filterButton.setPrefHeight(40);
+        filterButton.setPrefWidth(40);
 
         rightControls.getChildren().addAll(searchBar, filterButton);
 
@@ -90,7 +95,18 @@ public class DealFlow {
 
         // -------------------- FILTER --------------------
         ContextMenu filterMenu = new ContextMenu();
+        filterMenu.prefWidth(300);
         List<CheckBox> sectorCheckboxes = new ArrayList<>();
+
+        filterMenu.showingProperty().addListener((obs, oldVal, newVal) -> {
+            if(filterButton.getStyleClass().remove("regular-button-on")) {
+                filterButton.getStyleClass().add("regular-button-off");
+
+            } else {
+                filterButton.getStyleClass().remove("regular-button-off");
+                filterButton.getStyleClass().add("regular-button-on");
+            }
+        });
 
         for (String sector : startups.keySet()) {
             CheckBox cb = new CheckBox(sector);
@@ -101,21 +117,20 @@ public class DealFlow {
             sectorCheckboxes.add(cb);
         }
 
-        // "Show All" button
-//        Button showAllBtn = new Button("Show All");
-//        showAllBtn.setOnAction(e -> {
-//            for (CheckBox cb : sectorCheckboxes) cb.setSelected(true);
-//            updateShownStartups(sectorCheckboxes, searchBar.getText(), content);
-//        });
-//        filterMenu.getItems().add(new CustomMenuItem(showAllBtn));
-
         filterButton.setOnAction(e -> {
+            if (filterMenu.isShowing()) {
+                filterMenu.hide();
+                return;
+            }
+
             filterMenu.getItems().clear();
             sectorCheckboxes.clear();
 
             for (String sector : startups.keySet()) {
                 CheckBox cb = new CheckBox(sector);
-                cb.setSelected(true);
+                if (shownStartups.containsKey(sector)){
+                    cb.setSelected(true);
+                }
                 CustomMenuItem item = new CustomMenuItem(cb);
                 item.setHideOnClick(false);
                 filterMenu.getItems().add(item);
@@ -127,13 +142,14 @@ public class DealFlow {
             }
 
             Button showAllBtn = new Button("Show All");
+            showAllBtn.setStyle("-fx-cursor: hand;");
             showAllBtn.setOnAction(ev -> {
                 for (CheckBox cb : sectorCheckboxes) cb.setSelected(true);
                 updateShownStartups(sectorCheckboxes, searchBar.getText(), content);
             });
             filterMenu.getItems().add(new CustomMenuItem(showAllBtn));
 
-            filterMenu.show(filterButton, Side.BOTTOM, 0, 0);
+            filterMenu.show(filterButton, Side.BOTTOM, -100, 10);
         });
 
         // -------------------- FILTER & SEARCH --------------------
@@ -149,13 +165,11 @@ public class DealFlow {
     private static void updateShownStartups(List<CheckBox> sectorCheckboxes, String searchText, HBox content) {
         shownStartups.clear();
 
-        // Determine which sectors are checked
         Set<String> activeSectors = sectorCheckboxes.stream()
                 .filter(CheckBox::isSelected)
                 .map(CheckBox::getText)
                 .collect(Collectors.toSet());
 
-        // Filter startups
         for (Map.Entry<String, List<Startup>> entry : startups.entrySet()) {
             String sector = entry.getKey();
             if (!activeSectors.contains(sector)) continue;
@@ -170,82 +184,10 @@ public class DealFlow {
             }
         }
 
-        // Rebuild UI
         content.getChildren().clear();
         for (Map.Entry<String, List<Startup>> entry : shownStartups.entrySet()) {
-            VBox sectorBox = buildSectorBox(entry.getKey(), entry.getValue());
+            VBox sectorBox = SectorColumn.buildSectorColumn(entry.getKey(), entry.getValue());
             content.getChildren().add(sectorBox);
         }
-    }
-
-    private static VBox buildSectorBox(String sector, List<Startup> startups) {
-        VBox sectorBox = new VBox(10);
-        sectorBox.setPrefWidth(350);
-
-        // Header with color + name
-        HBox header = new HBox(5);
-        Rectangle colorSquare = new Rectangle(20, 20, Repository.getInstance().getSectorColor().get(sector));
-        Label title = new Label(sector);
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-        header.getChildren().addAll(colorSquare, title);
-
-        sectorBox.getChildren().add(header);
-
-        // Startups
-        for (Startup s : startups) {
-            Button card = buildStartupCard(s, Repository.getInstance().getSectorColor().get(sector));
-            sectorBox.getChildren().add(card);
-        }
-
-        return sectorBox;
-    }
-
-    private static Button buildStartupCard(Startup s, Color accent) {
-        Button card = new Button();
-        card.setPrefWidth(330);
-        card.setWrapText(true);
-        card.setAlignment(Pos.TOP_LEFT);
-        card.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-border-color: #CCCCCC;" +
-                        "-fx-border-radius: 5;" +
-                        "-fx-background-radius: 5;" +
-                        "-fx-padding: 10;" +
-                        "-fx-cursor: hand;"
-        );
-
-        HBox layout = new HBox(10);
-
-        // Accent stripe
-        Rectangle stripe = new Rectangle(5, 80, accent);
-        stripe.heightProperty().bind(
-                Bindings.createDoubleBinding(
-                        () -> layout.getHeight(), // Subtract padding from the HBox's height
-                        layout.heightProperty()
-                )
-        );
-
-        // Info
-        VBox info = new VBox(5);
-        Label name = new Label(s.getName());
-        name.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-        Label desc = new Label(s.getDescription());
-        desc.setWrapText(true);
-
-        GridPane details = new GridPane();
-        details.setHgap(10);
-        details.setVgap(5);
-
-        details.addRow(0, new Label("Funding:"), new Label(s.getFundingStage()));
-        details.addRow(1, new Label("Ticket Size:"), new Label("$" + String.valueOf(s.getTicketSize()) + "M"));
-        details.addRow(2, new Label("Location:"), new Label(s.getLocation()));
-        details.addRow(3, new Label("Founded:"), new Label(String.valueOf(s.getFoundYear())));
-
-        info.getChildren().addAll(name, desc, details);
-
-        layout.getChildren().addAll(stripe, info);
-        card.setGraphic(layout);
-
-        return card;
     }
 }
