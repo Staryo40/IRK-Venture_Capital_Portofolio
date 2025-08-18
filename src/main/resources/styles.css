@@ -47,3 +47,36 @@
 .regular-button-on .button-icon {
     -fx-fill: white;
 }
+
+.text-input:focused {
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: #c0c0c0;
+}
+
+.date-picker:focused {
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: #c0c0c0;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.execute-button {
+    -fx-background-color: orange;
+    -fx-cursor: hand;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: transparent;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.execute-button:hover {
+    -fx-background-color: #ff9933;
+}
+
+.execute-button:pressed {
+    -fx-background-color: #cc6600;
+}

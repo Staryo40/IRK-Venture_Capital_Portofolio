@@ -56,6 +56,7 @@ public class PortofolioConstruction {
         investmentBudgetField.setPromptText("17");
         investmentBudgetField.setPrefHeight(40);
         investmentBudgetField.setPrefWidth(200);
+        investmentBudgetField.getStyleClass().add("text-input");
         VBox investmentBudget = new VBox(5);
         investmentBudget.setPadding(new Insets(10));
         investmentBudget.getChildren().addAll(investmentBudgetTitle, investmentBudgetField);
@@ -65,6 +66,7 @@ public class PortofolioConstruction {
         targetFundField.setPromptText("30");
         targetFundField.setPrefHeight(40);
         targetFundField.setPrefWidth(200);
+        targetFundField.getStyleClass().add("text-input");
         VBox targetFund = new VBox(5);
         targetFund.setPadding(new Insets(10));
         targetFund.getChildren().addAll(targetFundTitle, targetFundField);
@@ -74,6 +76,7 @@ public class PortofolioConstruction {
         datePicker.setPromptText("yyyy-MM-dd");
         datePicker.setValue(LocalDate.of(2025, 8, 4));
         datePicker.setPrefHeight(40);
+        datePicker.getStyleClass().add("date-picker");
         VBox constructionDate = new VBox(5);
         constructionDate.setPadding(new Insets(10));
         constructionDate.getChildren().addAll(constructionDateTitle, datePicker);
@@ -110,6 +113,7 @@ public class PortofolioConstruction {
         executionRow.setSpacing(10);
 
         Button executionButton = new Button("Execute");
+        executionButton.getStyleClass().add("execute-button");
         executionButton.setPrefHeight(40);
         executionButton.setPrefWidth(240);
 
