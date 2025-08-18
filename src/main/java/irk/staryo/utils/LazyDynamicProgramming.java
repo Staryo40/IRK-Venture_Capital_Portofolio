@@ -1,7 +1,6 @@
 package irk.staryo.utils;
 
 import irk.staryo.model.*;
-import javafx.util.Pair;
 
 import java.util.*;
 
@@ -11,13 +10,16 @@ public class LazyDynamicProgramming {
         Map<String, DiscretePMF> cache = new HashMap<>();
 
         List<String> sortedStringBit = filteredStartups.getStringBits();
+        System.out.println("First list: " + sortedStringBit);
         sortedStringBit.sort(Comparator.comparingInt(StringBitOperation::stringBitOrder));
         LinkedList<String> linkedStringBit = new LinkedList<>(sortedStringBit);
 
         calculateCombinationConvolution(linkedStringBit, filteredStartups.getStartupMap(), cache, rawIndex);
 
         Map<String, DiscretePMF> pureMapping = new HashMap<>();
+        System.out.println("Second list: " + sortedStringBit);
         for (String s : sortedStringBit){
+            if (cache.get(s) == null) System.out.println(s + " is null from cache");
             pureMapping.put(s, cache.get(s));
         }
 
@@ -84,6 +86,7 @@ public class LazyDynamicProgramming {
                 }
 
                 if (cache.get(complement) == null){
+//                    calculateCombinationConvolution(new LinkedList<>(List.of(complement)), startupMap, cache, rawIndex);
                     stringBitQueue.addFirst(complement);
                     calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                 }
@@ -116,6 +119,7 @@ public class LazyDynamicProgramming {
                 if (bestCommon == null || bestCommon.equals(StringBitOperation.emptyStringBitN(current.length()))){ // Absolutely No Common
                     String existingSub = findBiggestExistingSub(cache, subList);
                     if (cache.get(existingSub) == null){
+//                        calculateCombinationConvolution(new LinkedList<>(List.of(existingSub)), startupMap, cache, rawIndex);
                         stringBitQueue.addFirst(existingSub);
                         calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                     }
@@ -127,6 +131,7 @@ public class LazyDynamicProgramming {
                     }
 
                     if (cache.get(complement) == null){
+//                        calculateCombinationConvolution(new LinkedList<>(List.of(complement)), startupMap, cache, rawIndex);
                         stringBitQueue.addFirst(complement);
                         calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                     }
@@ -141,6 +146,7 @@ public class LazyDynamicProgramming {
                     }
 
                     if (cache.get(complement) == null){
+//                        calculateCombinationConvolution(new LinkedList<>(List.of(complement)), startupMap, cache, rawIndex);
                         stringBitQueue.addFirst(complement);
                         calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                     }

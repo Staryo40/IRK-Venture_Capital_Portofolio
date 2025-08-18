@@ -16,4 +16,12 @@ public class PortofolioDpResult {
         this.startups = startups;
         this.distribution = distribution;
     }
+
+    public DiscretePMF getDistribution() {
+        return distribution;
+    }
+
+    public List<Startup> getStartups() {
+        return startups;
+    }
 }

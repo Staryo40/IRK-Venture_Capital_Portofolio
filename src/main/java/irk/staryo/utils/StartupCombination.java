@@ -75,29 +75,30 @@ public class StartupCombination {
     }
 
     // Target is a negative integer expressing the index of the day before 4 August 2025
-    public static FilteredStringbitStartups filterTargetBased(List<Startup> startups, int costLimit, int target) throws Exception {
+    public static FilteredStringbitStartups filterTargetBased(List<Startup> startups, int costLimit, int rawDateIndex, int target) throws Exception {
         assert !startups.isEmpty() : "Startup list cannot be empty to produce target combinations";
         FilteredStringbitStartups sectorCostFiltered = generateCombinationBitmasks(startups, costLimit);
         List<String> stringBitList = sectorCostFiltered.getStringBits();
         Map<Integer, Startup> startupMapping = sectorCostFiltered.getStartupMap();
 
-        for (String s : stringBitList) {
-            List<Integer> indexList = StringBitOperation.toIndexList(s);
-            int cumulativeMax = 0;
-            for (Integer i : indexList){
-                Startup current = startupMapping.get(i);
-                int listN = current.getProceedsScenarioTrend().getOptimistic().size() - 1;
-                if (Math.abs(target) > listN){
-                    throw new Exception("Startup " + current.getName() + " does not have P/R/O for " + Math.abs(target) + " days ago");
+        stringBitList.removeIf(s -> {
+            try {
+                List<Integer> indexList = StringBitOperation.toIndexList(s);
+                int cumulativeMax = 0;
+                for (Integer i : indexList) {
+                    Startup current = startupMapping.get(i);
+                    int listN = current.getProceedsScenarioTrend().getOptimistic().size() - 1;
+                    if (Math.abs(rawDateIndex) > listN){
+                        throw new RuntimeException("Startup " + current.getName() + " does not have P/R/O for " + Math.abs(rawDateIndex) + " days ago");
+                    }
+                    int index = listN + rawDateIndex;
+                    cumulativeMax += current.getProceedsScenarioTrend().getOptimistic().get(index);
                 }
-                int index = listN + target;
-                cumulativeMax += current.getProceedsScenarioTrend().getOptimistic().get(index);
+                return cumulativeMax < target;
+            } catch (RuntimeException e) {
+                throw e;
             }
-
-            if (cumulativeMax < target){
-                stringBitList.remove(s);
-            }
-        }
+        });
 
         return new FilteredStringbitStartups(stringBitList, startupMapping);
     }

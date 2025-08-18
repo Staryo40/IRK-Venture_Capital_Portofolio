@@ -56,7 +56,6 @@ public class StartupDetail {
 
         VBox mainContainer = new VBox(20);
         mainContainer.setPadding(new Insets(20));
-        mainContainer.setStyle("-fx-background-color: #FFFFFF;");
 
         // -------------------- BACK BUTTON --------------------
         HBox backButtonContainer = new HBox();

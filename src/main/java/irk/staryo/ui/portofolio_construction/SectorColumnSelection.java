@@ -20,7 +20,6 @@ public class SectorColumnSelection {
         VBox sectorBox = new VBox(10);
         sectorBox.setPrefWidth(330);
 
-        // Header with color + name
         HBox header = new HBox(5);
         header.setAlignment(Pos.CENTER_LEFT);
         Circle colorCircle = new Circle(10, Repository.getInstance().getSectorColor().get(sector));
@@ -30,7 +29,6 @@ public class SectorColumnSelection {
 
         sectorBox.getChildren().add(header);
 
-        // Startups
         for (Startup s : startups) {
             Button card = StartupItemSelection.selectStartupButton(s, Repository.getInstance().getSectorColor().get(sector), stage);
             sectorBox.getChildren().add(card);

@@ -1,8 +1,13 @@
 package irk.staryo.ui.portofolio_construction;
 
+import irk.staryo.model.FilteredStringbitStartups;
+import irk.staryo.model.PortofolioDpResult;
 import irk.staryo.model.Startup;
 import irk.staryo.ui.deal_flow.SectorColumn;
+import irk.staryo.ui.deal_flow.StartupDetail;
+import irk.staryo.utils.LazyDynamicProgramming;
 import irk.staryo.utils.Repository;
+import irk.staryo.utils.StartupCombination;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -24,6 +29,7 @@ import org.kordamp.ikonli.materialdesign.MaterialDesign;
 
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -342,6 +348,39 @@ public class PortofolioConstruction {
                 showAlert("Invalid Date", "Construction Date cannot be after 4 August 2025", "Please select a valid date.");
                 return;
             }
+
+            FilteredStringbitStartups filteredStartups;
+            int targetDateIndex = (int) ChronoUnit.DAYS.between(maxDate, constructionDateValue);
+            try {
+                filteredStartups = StartupCombination.filterTargetBased(selectedList, investmentBudgetValue, targetDateIndex, targetFundGain);
+                if (filteredStartups.getStringBits().isEmpty()){
+                    throw new Exception("No startup combination can reach specified target fund gain, chance is 0%");
+                }
+            } catch (Exception e){
+                showAlert("Filter Error", "A problem occurred when filtering the selected startup list", e.getMessage());
+                return;
+            }
+
+            showSpinner(stage);
+            PortofolioDpResult result = null;
+            try {
+                result = LazyDynamicProgramming.execute(filteredStartups, targetFundGain, targetDateIndex);
+                if (result.getStartups().isEmpty() && result.getDistribution() == null){
+                    throw new Exception("Startup combination analysis shows that the max chance is 0%, no combination fit user input criteria.");
+                }
+            } catch (Exception e) {
+                navigateBackToPortofolioConstruction(stage);
+                showAlert("Dynamic Problem", "A problem occurred when processing portofolio construction", e.getMessage());
+                return;
+            }
+
+            if (result == null){
+                navigateBackToPortofolioConstruction(stage);
+                showAlert("Result Error", "A problem occured with the process result", "Result is null");
+                return;
+            }
+
+            navigateToResult(stage, result, constructionDateValue, targetFundGain, investmentBudgetValue);
         });
 
         return portofolioConstruction;
@@ -472,5 +511,48 @@ public class PortofolioConstruction {
         alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
 
         alert.showAndWait();
+    }
+
+    private static void navigateBackToPortofolioConstruction(Stage stage) {
+        BorderPane mainScene = (BorderPane) stage.getScene().getRoot();
+        HBox mainContent = (HBox) mainScene.getCenter();
+
+        if (mainContent.getChildren().size() >= 2) {
+            VBox rightPanel = (VBox) mainContent.getChildren().get(1);
+            rightPanel.getChildren().clear();
+            rightPanel.getChildren().add(PortofolioConstruction.getPortofolioConstruction(stage));
+        }
+    }
+
+    private static void showSpinner(Stage stage) {
+        BorderPane mainScene = (BorderPane) stage.getScene().getRoot();
+        HBox mainContent = (HBox) mainScene.getCenter();
+
+        if (mainContent.getChildren().size() >= 2) {
+            VBox rightPanel = (VBox) mainContent.getChildren().get(1);
+            rightPanel.getChildren().clear();
+
+            ProgressIndicator spinner = new ProgressIndicator();
+            spinner.setStyle(
+                    "-fx-progress-color: orange;"
+            );
+
+            StackPane spinnerContainer = new StackPane(spinner);
+            spinnerContainer.setPrefHeight(rightPanel.getHeight());
+            spinnerContainer.setPrefWidth(rightPanel.getWidth());
+
+            rightPanel.getChildren().add(spinnerContainer);
+        }
+    }
+
+    private static void navigateToResult(Stage stage, PortofolioDpResult result, LocalDate date, int targetFund, int budget) {
+        BorderPane mainScene = (BorderPane) stage.getScene().getRoot();
+        HBox mainContent = (HBox) mainScene.getCenter();
+
+        if (mainContent.getChildren().size() >= 2) {
+            VBox rightPanel = (VBox) mainContent.getChildren().get(1);
+            rightPanel.getChildren().clear();
+            rightPanel.getChildren().add(PortofolioResult.getPortofolioResult(stage, result, date, targetFund, budget));
+        }
     }
 }
