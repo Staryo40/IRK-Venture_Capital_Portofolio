@@ -1,6 +1,7 @@
 package irk.staryo.ui.common;
 
 import irk.staryo.ui.deal_flow.DealFlow;
+import irk.staryo.ui.portofolio_construction.PortofolioConstruction;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -51,7 +52,7 @@ public class MainContent {
 
         // Right Panel Sections
         BorderPane dealFlow = DealFlow.getDealFlow(stage);
-        VBox view2 = new VBox(new Label("This is View 2"));
+        BorderPane portofolioConstruction = PortofolioConstruction.getPortofolioConstruction(stage);
         rightPanel.getChildren().add(dealFlow);
 
         // Button Styling
@@ -72,7 +73,7 @@ public class MainContent {
         });
 
         btnView2.setOnAction(e -> {
-            rightPanel.getChildren().setAll(view2);
+            rightPanel.getChildren().setAll(portofolioConstruction);
 
             for (Button btn : buttons) {
                 btn.getStyleClass().removeAll("main-button-on", "main-button-off");

@@ -5,6 +5,7 @@ import irk.staryo.model.*;
 import irk.staryo.ui.common.MainContent;
 import irk.staryo.ui.common.TopBar;
 import irk.staryo.ui.deal_flow.DealFlow;
+import irk.staryo.ui.portofolio_construction.PortofolioConstruction;
 import irk.staryo.utils.*;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -29,6 +30,7 @@ public class Main extends Application {
         // -------- SETUP --------
         DatabaseLoader.load();
         DealFlow.startups = Repository.getInstance().getSortedStartups();
+        PortofolioConstruction.startups = Repository.getInstance().getSortedStartups();
 //        for (Startup su : Repository.getInstance().getStartupList()){
 //            System.out.println(su);
 //        }
