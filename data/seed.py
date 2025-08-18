@@ -1,10 +1,24 @@
 import random
+import string
 import subprocess
 from pymongo import MongoClient
 
 FUNDING_STAGES = ["SEED", "SERIES A", "SERIES B", "SERIES C", "SERIES D+"]
 SECTORS = ["FIN_TECH", "HEALTH_TECH", "ED_TECH", "GREEN_TECH", "FOOD_TECH", "PROP_TECH", "CYBERSECURITY", "GAMING", "SPACE_TECH", "AI/ML"]
 LOCATIONS = ["Jakarta, Indonesia", "Bandung, Indonesia", "Surabaya, Indonesia", "Bali, Indonesia", "Medan, Indonesia"]
+
+PREFIXES = ["Tech", "Inno", "Data", "Cloud", "Neo", "Smart", "Green", "Cyber", "Quantum", "Next"]
+SUFFIXES = ["ify", "Labs", "Works", "Solutions", "Hub", "Systems", "Corp", "Dynamics", "Soft", "Logic"]
+
+def random_name(index):
+    return f"{random.choice(PREFIXES)}{random.choice(SUFFIXES)}_{index}"
+
+def random_description():
+    words = [
+        ''.join(random.choices(string.ascii_lowercase, k=random.randint(3, 10)))
+        for _ in range(random.randint(10, 50))  # ~ up to 100 words
+    ]
+    return " ".join(words)
 
 def generate_startup_data(amount):
     startups = []
@@ -24,8 +38,8 @@ def generate_startup_data(amount):
             optimistic.append(o)
         
         startup = {
-            "name": f"Startup_{i+1}",
-            "description": f"Description for Startup_{i+1}",
+            "name": random_name(i+1),
+            "description": random_description(),
             "fundingStage": random.choice(FUNDING_STAGES),
             "ticketSize": ticket_size,
             "location": random.choice(LOCATIONS),
