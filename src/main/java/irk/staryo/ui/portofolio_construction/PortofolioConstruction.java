@@ -2,15 +2,24 @@ package irk.staryo.ui.portofolio_construction;
 
 import irk.staryo.model.Startup;
 import irk.staryo.ui.deal_flow.SectorColumn;
+import irk.staryo.utils.Repository;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
+import javafx.collections.SetChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.materialdesign.MaterialDesign;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -19,6 +28,9 @@ import java.util.stream.Collectors;
 public class PortofolioConstruction {
     public static Map<String, List<Startup>> startups = new HashMap<>();;
     public static Map<String, List<Startup>> shownStartups = new HashMap<>();
+    public static ObservableSet<Startup> selectedStartups = FXCollections.observableSet();
+    public static VBox selectedPanelBox = new VBox(10);
+    public static BooleanProperty selectedPanelVisible = new SimpleBooleanProperty(false);
 
     public static BorderPane getPortofolioConstruction(Stage stage) {
         BorderPane portofolioConstruction = new BorderPane();
@@ -108,17 +120,73 @@ public class PortofolioConstruction {
             System.out.println("Selected date is: " + newValue);
         });
 
+        // --- Execution ---
         HBox executionRow = new HBox();
         executionRow.setAlignment(Pos.CENTER_LEFT);
         executionRow.setSpacing(10);
+
+        Region executionSpacer = new Region();
+        HBox.setHgrow(executionSpacer, Priority.ALWAYS);
 
         Button executionButton = new Button("Execute");
         executionButton.getStyleClass().add("execute-button");
         executionButton.setPrefHeight(40);
         executionButton.setPrefWidth(240);
 
+        Button selectedStartupButton = new Button("Selected Startup (0)");
+        selectedStartupButton.getStyleClass().add("execute-button");
+        selectedStartupButton.setPrefHeight(40);
+        selectedStartupButton.setPrefWidth(160);
+
+        // Button text updates
+        Runnable updateButtonText = () -> {
+            int count = PortofolioConstruction.selectedStartups.size();
+            selectedStartupButton.setText("Selected Startup (" + count + ")");
+        };
+        updateButtonText.run();
+        PortofolioConstruction.selectedStartups.addListener((SetChangeListener<Startup>) change -> {
+            updateButtonText.run();
+        });
+
+        // -------------------- RIGHT PANEL (selected startups) --------------------
+        selectedPanelBox.setPadding(new Insets(10));
+        selectedPanelBox.setStyle(
+                "-fx-background-color: #F9F9F9;" +
+                        "-fx-border-color: #DDDDDD; " +
+                        "-fx-focus-color: transparent; " +
+                        "-fx-faint-focus-color: transparent;"
+        );
+        selectedPanelBox.setPrefWidth(300);
+
+        ScrollPane rightPanel = new ScrollPane(selectedPanelBox);
+        rightPanel.setFitToWidth(true);
+        rightPanel.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        selectedStartups.addListener((SetChangeListener<Startup>) change -> {
+            if (change.wasAdded()) addToSelectedPanel(change.getElementAdded());
+            if (change.wasRemoved()) removeFromSelectedPanel(change.getElementRemoved());
+        });
+
+        selectedStartupButton.setOnAction(e ->
+                PortofolioConstruction.selectedPanelVisible.set(!PortofolioConstruction.selectedPanelVisible.get())
+        );
+
+        PortofolioConstruction.selectedPanelVisible.addListener((obs, oldVal, newVal) -> {
+            if (newVal) {
+                portofolioConstruction.setRight(rightPanel);
+                portofolioConstruction.getRight().setStyle(
+                        "-fx-background-color: white;" +
+                                "-fx-focus-color: transparent;" +
+                                "-fx-faint-focus-color: transparent;"
+                );
+            } else {
+                portofolioConstruction.setRight(null);
+            }
+        });
+
         HBox.setMargin(executionButton, new Insets(-10, 0, 0, 10));
-        executionRow.getChildren().addAll(executionButton);
+        HBox.setMargin(selectedStartupButton, new Insets(-10, 0, 0, 0));
+        executionRow.getChildren().addAll(executionButton, executionSpacer, selectedStartupButton);
 
         topBar.getChildren().addAll(leftText, topInputs, executionRow);
 
@@ -246,5 +314,68 @@ public class PortofolioConstruction {
             VBox sectorBox = SectorColumnSelection.buildSectorColumn(entry.getKey(), entry.getValue(), stage);
             content.getChildren().add(sectorBox);
         }
+    }
+
+    public static void toggleSelection(Startup s) {
+        if (selectedStartups.contains(s)) {
+            selectedStartups.remove(s);
+        } else {
+            selectedStartups.add(s);
+        }
+    }
+
+    public static void addToSelectedPanel(Startup s) {
+        for (Node n : selectedPanelBox.getChildren()) {
+            if (n.getUserData() == s) return;
+        }
+
+        HBox container = new HBox();
+        container.setUserData(s);
+        container.setPadding(new Insets(5));
+        container.setStyle(
+                "-fx-border-color: black; " +
+                        "-fx-border-width: 1; " +
+                        "-fx-border-radius: 2; " +
+                        "-fx-padding: 4;"
+        );
+
+        VBox startupContainer = new VBox();
+
+        Label lbl = new Label(s.getName());
+        lbl.setStyle("-fx-font-size: 14px; -fx-padding: 2; -fx-font-weight: bold;");
+
+        HBox sectorSection = new HBox();
+        sectorSection.setAlignment(Pos.CENTER_LEFT);
+        Circle colorCircle = new Circle(8, Repository.getInstance().getSectorColor().get(s.getSector()));
+        Label sectorLabel = new Label(s.getSector());
+        sectorLabel.setStyle("-fx-font-size: 10px; -fx-padding: 2;");
+
+        // DELETE BUTTON
+        Button deleteButton = new Button();
+        FontIcon closeIcon = new FontIcon(MaterialDesign.MDI_CLOSE);
+        closeIcon.setIconSize(16);
+        closeIcon.setIconColor(javafx.scene.paint.Color.BLACK);
+
+        deleteButton.setGraphic(closeIcon);
+        deleteButton.setStyle(
+                "-fx-background-color: transparent;" +
+                        "-fx-padding: 2 5 2 5;" +
+                        "-fx-cursor: hand;"
+        );
+        deleteButton.setOnAction(e -> toggleSelection(s));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        sectorSection.getChildren().addAll(colorCircle, sectorLabel);
+        startupContainer.getChildren().addAll(lbl, sectorSection);
+
+        container.getChildren().addAll(startupContainer, spacer, deleteButton);
+
+        selectedPanelBox.getChildren().add(container);
+    }
+
+    public static void removeFromSelectedPanel(Startup s) {
+        selectedPanelBox.getChildren().removeIf(node -> node.getUserData() == s);
     }
 }

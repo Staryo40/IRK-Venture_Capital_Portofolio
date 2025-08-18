@@ -80,3 +80,21 @@
 .execute-button:pressed {
     -fx-background-color: #cc6600;
 }
+
+.startup-card-normal {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CCCCCC;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 10;
+    -fx-cursor: hand;
+}
+
+.startup-card-highlight {
+    -fx-background-color: #FFF4E0;
+    -fx-border-color: #FF8800;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 10;
+    -fx-cursor: hand;
+}

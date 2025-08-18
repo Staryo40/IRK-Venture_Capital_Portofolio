@@ -3,6 +3,8 @@ package irk.staryo.ui.portofolio_construction;
 import irk.staryo.model.Startup;
 import irk.staryo.utils.Visuals;
 import javafx.beans.binding.Bindings;
+import javafx.collections.ListChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -21,14 +23,6 @@ public class StartupItemSelection {
         card.setPrefWidth(310);
         card.setWrapText(true);
         card.setAlignment(Pos.TOP_LEFT);
-        card.setStyle(
-                "-fx-background-color: #FFFFFF;" +
-                        "-fx-border-color: #CCCCCC;" +
-                        "-fx-border-radius: 5;" +
-                        "-fx-background-radius: 5;" +
-                        "-fx-padding: 10;" +
-                        "-fx-cursor: hand;"
-        );
 
         HBox layout = new HBox(10);
 
@@ -78,8 +72,33 @@ public class StartupItemSelection {
         layout.getChildren().addAll(stripe, info);
         card.setGraphic(layout);
 
+        if (PortofolioConstruction.selectedStartups.contains(s)) {
+            card.getStyleClass().removeAll("startup-card-highlight", "startup-card-normal");
+            card.getStyleClass().add("startup-card-highlight");
+        } else {
+            card.getStyleClass().removeAll("startup-card-highlight", "startup-card-normal");
+            card.getStyleClass().add("startup-card-normal");
+        }
+
+        PortofolioConstruction.selectedStartups.addListener((SetChangeListener<? super Startup>) change -> {
+                if (PortofolioConstruction.selectedStartups.contains(s)) {
+                    card.getStyleClass().removeAll("startup-card-highlight", "startup-card-normal");
+                    card.getStyleClass().add("startup-card-highlight");
+                } else {
+                    card.getStyleClass().removeAll("startup-card-highlight", "startup-card-normal");
+                    card.getStyleClass().add("startup-card-normal");
+                }
+        });
+
         card.setOnAction(e -> {
-            System.out.println(s.getName() + " was selected");
+            PortofolioConstruction.toggleSelection(s);
+            if (PortofolioConstruction.selectedStartups.contains(s)) {
+                card.getStyleClass().removeAll("startup-card-highlight", "startup-card-normal");
+                card.getStyleClass().add("startup-card-highlight");
+            } else {
+                card.getStyleClass().removeAll("startup-card-highlight", "startup-card-normal");
+                card.getStyleClass().add("startup-card-normal");
+            }
         });
 
         return card;

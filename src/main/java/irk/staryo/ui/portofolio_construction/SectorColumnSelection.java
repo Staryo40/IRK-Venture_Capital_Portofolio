@@ -2,10 +2,12 @@ package irk.staryo.ui.portofolio_construction;
 
 import irk.staryo.model.Startup;
 import irk.staryo.utils.Repository;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -20,10 +22,11 @@ public class SectorColumnSelection {
 
         // Header with color + name
         HBox header = new HBox(5);
-        Rectangle colorSquare = new Rectangle(20, 20, Repository.getInstance().getSectorColor().get(sector));
+        header.setAlignment(Pos.CENTER_LEFT);
+        Circle colorCircle = new Circle(10, Repository.getInstance().getSectorColor().get(sector));
         Label title = new Label(sector);
         title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-        header.getChildren().addAll(colorSquare, title);
+        header.getChildren().addAll(colorCircle, title);
 
         sectorBox.getChildren().add(header);
 
