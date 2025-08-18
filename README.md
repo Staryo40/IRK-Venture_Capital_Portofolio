@@ -142,6 +142,12 @@ To run the program locally, git clone and use the following commands:
 docker run --name startups -d -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin123 mongo:latest
 ```
 
+or the command below if you have instance "startups" existing in docker
+
+```bash
+docker start startups
+```
+
 2. Populate Database with dummy data
 ```bash
 cd data # Go to data directory
