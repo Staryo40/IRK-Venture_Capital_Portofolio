@@ -13,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
@@ -21,6 +22,7 @@ import javafx.stage.Stage;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign.MaterialDesign;
 
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,6 +75,14 @@ public class PortofolioConstruction {
         investmentBudget.setPadding(new Insets(10));
         investmentBudget.getChildren().addAll(investmentBudgetTitle, investmentBudgetField);
 
+        investmentBudgetField.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("\\d*")) {
+                return change;
+            }
+            return null;
+        }));
+
         Label targetFundTitle = new Label("Target Fund Gain (Millions USD)");
         TextField targetFundField = new TextField();
         targetFundField.setPromptText("30");
@@ -82,6 +92,14 @@ public class PortofolioConstruction {
         VBox targetFund = new VBox(5);
         targetFund.setPadding(new Insets(10));
         targetFund.getChildren().addAll(targetFundTitle, targetFundField);
+
+        targetFundField.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("\\d*")) {
+                return change;
+            }
+            return null;
+        }));
 
         Label constructionDateTitle = new Label("Construction Date");
         DatePicker datePicker = new DatePicker();
@@ -284,6 +302,48 @@ public class PortofolioConstruction {
 
         updateShownStartups(sectorCheckboxes, "", content, stage);
 
+        // -------------------- EXECUTION LOGIC --------------------
+        executionButton.setOnAction(ev -> {
+            List<Startup> selectedList = new ArrayList<>(PortofolioConstruction.selectedStartups);
+            int investmentBudgetValue = 0;
+            int targetFundGain = 0;
+            LocalDate constructionDateValue = datePicker.getValue();
+
+            if (selectedList.isEmpty()){
+                showAlert("Error!", "Input Error Detected", "No startup selected");
+                return;
+            }
+            try {
+                investmentBudgetValue = Integer.parseInt(investmentBudgetField.getText());
+                if (investmentBudgetValue <= 0){
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException e) {
+                showAlert("Invalid Input", "Investment Budget must be a number", "Please enter a valid number for Investment Budget that is above 0.");
+                return;
+            }
+
+            try {
+                targetFundGain = Integer.parseInt(targetFundField.getText());
+                if (targetFundGain <= 0){
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException e) {
+                showAlert("Invalid Input", "Target Fund Gain must be a number", "Please enter a valid number for Target Fund Gain that is above 0.");
+                return;
+            }
+
+            LocalDate maxDate = LocalDate.of(2025, 8, 4);
+            if (constructionDateValue == null) {
+                showAlert("Invalid Input", "Construction Date is required", "Please select a construction date.");
+                return;
+            }
+            if (constructionDateValue.isAfter(maxDate)){
+                showAlert("Invalid Date", "Construction Date cannot be after 4 August 2025", "Please select a valid date.");
+                return;
+            }
+        });
+
         return portofolioConstruction;
     }
 
@@ -377,5 +437,40 @@ public class PortofolioConstruction {
 
     public static void removeFromSelectedPanel(Startup s) {
         selectedPanelBox.getChildren().removeIf(node -> node.getUserData() == s);
+    }
+
+    public static void showAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+
+        Label contentLabel = new Label(content);
+        contentLabel.setWrapText(true);
+        contentLabel.setMaxWidth(400); // adjust width as needed
+        contentLabel.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px;");
+
+        alert.getDialogPane().setContent(contentLabel);
+
+        DialogPane dialogPane = alert.getDialogPane();
+        dialogPane.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-border-color: gray;" +
+                        "-fx-border-width: 1;" +
+                        "-fx-font-family: 'Arial';"
+        );
+
+        dialogPane.lookupButton(ButtonType.OK).setStyle(
+                "-fx-background-color: #f44336; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-weight: bold;"
+        );
+
+        Stage stage = (Stage) alert.getDialogPane().getScene().getWindow();
+        InputStream inputStream = PortofolioConstruction.class.getResourceAsStream("/images/VCPLogo.png");
+        stage.getIcons().add(new Image(inputStream));
+
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+
+        alert.showAndWait();
     }
 }
