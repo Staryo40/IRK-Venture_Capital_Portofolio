@@ -10,16 +10,16 @@ public class LazyDynamicProgramming {
         Map<String, DiscretePMF> cache = new HashMap<>();
 
         List<String> sortedStringBit = filteredStartups.getStringBits();
-        System.out.println("First list: " + sortedStringBit);
+//        System.out.println("First list: " + sortedStringBit);
         sortedStringBit.sort(Comparator.comparingInt(StringBitOperation::stringBitOrder));
         LinkedList<String> linkedStringBit = new LinkedList<>(sortedStringBit);
 
-        calculateCombinationConvolution(linkedStringBit, filteredStartups.getStartupMap(), cache, rawIndex);
+        calculateCombinationConvolutionIterative(linkedStringBit, filteredStartups.getStartupMap(), cache, rawIndex);
 
         Map<String, DiscretePMF> pureMapping = new HashMap<>();
-        System.out.println("Second list: " + sortedStringBit);
+//        System.out.println("Second list: " + sortedStringBit);
         for (String s : sortedStringBit){
-            if (cache.get(s) == null) System.out.println(s + " is null from cache");
+//            if (cache.get(s) == null) System.out.println(s + " is null from cache");
             pureMapping.put(s, cache.get(s));
         }
 
@@ -90,6 +90,8 @@ public class LazyDynamicProgramming {
                     stringBitQueue.addFirst(complement);
                     calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                 }
+                System.out.println("First stringbit: " + pivotSub + ", second stringbit: " + complement);
+                System.out.println("First null pivotsub: " + (cache.get(pivotSub) == null) + ", second null: " + (cache.get(complement) == null));
                 DiscretePMF combinedPMF = ConvolutionCalculator.convolvePMFsFFT(cache.get(pivotSub), cache.get(complement));
                 cache.put(current, combinedPMF);
             } else {
@@ -135,10 +137,17 @@ public class LazyDynamicProgramming {
                         stringBitQueue.addFirst(complement);
                         calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                     }
-
+                    System.out.println("First stringbit: " + existingSub + ", second stringbit: " + complement);
+                    System.out.println("First null existingsub: " + (cache.get(existingSub) == null) + ", second null: " + (cache.get(complement) == null));
                     DiscretePMF combinedPMF = ConvolutionCalculator.convolvePMFsFFT(cache.get(existingSub), cache.get(complement));
                     cache.put(current, combinedPMF);
                 } else {
+                    if (cache.get(bestCommon) == null){
+//                        calculateCombinationConvolution(new LinkedList<>(List.of(complement)), startupMap, cache, rawIndex);
+                        stringBitQueue.addFirst(bestCommon);
+                        calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
+                    }
+
                     String complement = StringBitOperation.complement(current, bestCommon);
 
                     if (complement.equals(StringBitOperation.emptyStringBitN(current.length()))) {
@@ -150,8 +159,141 @@ public class LazyDynamicProgramming {
                         stringBitQueue.addFirst(complement);
                         calculateCombinationConvolution(stringBitQueue, startupMap, cache, rawIndex); // Ensure its there
                     }
+                    System.out.println("First stringbit: " + bestCommon + ", second stringbit: " + complement);
+                    System.out.println("First null bestcommon: " + (cache.get(bestCommon) == null) + ", second null: " + (cache.get(complement) == null));
                     DiscretePMF combinedPMF = ConvolutionCalculator.convolvePMFsFFT(cache.get(bestCommon), cache.get(complement));
                     cache.put(current, combinedPMF);
+                }
+            }
+        }
+    }
+
+    public static void calculateCombinationConvolutionIterative(LinkedList<String> stringBitQueue, Map<Integer, Startup> startupMap, Map<String, DiscretePMF> cache, int rawIndex) throws Exception {
+        while (!stringBitQueue.isEmpty()) {
+            String current = stringBitQueue.poll();
+
+            if (cache.get(current) != null) continue;
+
+            if (StringBitOperation.stringBitOrder(current) == 1){
+                List<Integer> indexList = StringBitOperation.toIndexList(current);
+                int sbIndex = indexList.getFirst();
+
+                Startup su = startupMap.get(sbIndex);
+                int listN = su.getProceedsScenarioTrend().getOptimistic().size() - 1;
+                if (Math.abs(rawIndex) > listN){
+                    throw new Exception("Startup " + su.getName() + " does not have P/R/O for " + Math.abs(rawIndex) + " days ago");
+                }
+                int index = listN + rawIndex;
+
+                ProceedsScenarioTrend suList = su.getProceedsScenarioTrend();
+                DiscretePMF pmf = PmfCalculator.pmfFromPert(suList.getPessimistic().get(index), suList.getRealistic().get(index), suList.getOptimistic().get(index));
+                cache.put(current, pmf);
+
+            } else {
+                List<String> subList = StringBitOperation.getLowerOrderSubsets(current);
+
+                String pivotSub = null;
+                for (String curSub : subList){
+                    if (cache.get(curSub) != null){
+                        pivotSub = curSub;
+                        break;
+                    }
+                }
+
+                if (pivotSub != null){
+                    String complement = StringBitOperation.complement(current, pivotSub);
+
+                    if (complement.equals(StringBitOperation.emptyStringBitN(current.length()))) {
+                        throw new IllegalStateException("Complement was empty for " + current + " with pivot " + pivotSub);
+                    }
+
+                    if (cache.get(complement) == null){
+                        stringBitQueue.addFirst(current);
+                        stringBitQueue.addFirst(complement);
+                        continue;
+                    }
+
+//                    System.out.println("First stringbit: " + pivotSub + ", second stringbit: " + complement);
+//                    System.out.println("First null pivotsub: " + (cache.get(pivotSub) == null) + ", second null: " + (cache.get(complement) == null));
+                    DiscretePMF combinedPMF = ConvolutionCalculator.convolvePMFsFFT(cache.get(pivotSub), cache.get(complement));
+                    cache.put(current, combinedPMF);
+
+                } else {
+                    // Find best common substring with other items in queue
+                    Map<String, Integer> commons = new HashMap<>();
+                    for (String item : stringBitQueue){
+                        if (StringBitOperation.stringBitOrder(current) == StringBitOperation.stringBitOrder(item)){
+                            String c = StringBitOperation.findCommonBits(current, item);
+                            commons.merge(c, 1, Integer::sum);
+                        }
+                    }
+
+                    String bestCommon = null;
+                    int bestOrder = Integer.MIN_VALUE;
+                    int bestFreq = Integer.MIN_VALUE;
+
+                    for (Map.Entry<String, Integer> entry : commons.entrySet()) {
+                        int order = StringBitOperation.stringBitOrder(entry.getKey());
+                        int freq = entry.getValue();
+
+                        if (order > bestOrder || (order == bestOrder && freq > bestFreq)) {
+                            bestCommon = entry.getKey();
+                            bestOrder = order;
+                            bestFreq = freq;
+                        }
+                    }
+
+                    if (bestCommon == null || bestCommon.equals(StringBitOperation.emptyStringBitN(current.length()))){
+                        // No useful common substring, find biggest existing sub
+                        String existingSub = findBiggestExistingSub(cache, subList);
+
+                        if (cache.get(existingSub) == null){
+                            stringBitQueue.addFirst(current);
+                            stringBitQueue.addFirst(existingSub);
+                            continue;
+                        }
+
+                        String complement = StringBitOperation.complement(current, existingSub);
+
+                        if (complement.equals(StringBitOperation.emptyStringBitN(current.length()))) {
+                            throw new IllegalStateException("Complement was empty for " + current + " with existing sub " + existingSub);
+                        }
+
+                        if (cache.get(complement) == null){
+                            stringBitQueue.addFirst(current);
+                            stringBitQueue.addFirst(complement);
+                            continue;
+                        }
+
+//                        System.out.println("First stringbit: " + existingSub + ", second stringbit: " + complement);
+//                        System.out.println("First null existingsub: " + (cache.get(existingSub) == null) + ", second null: " + (cache.get(complement) == null));
+                        DiscretePMF combinedPMF = ConvolutionCalculator.convolvePMFsFFT(cache.get(existingSub), cache.get(complement));
+                        cache.put(current, combinedPMF);
+
+                    } else {
+                        if (cache.get(bestCommon) == null){
+                            stringBitQueue.addFirst(current);
+                            stringBitQueue.addFirst(bestCommon);
+                            continue;
+                        }
+
+                        String complement = StringBitOperation.complement(current, bestCommon);
+
+                        if (complement.equals(StringBitOperation.emptyStringBitN(current.length()))) {
+                            throw new IllegalStateException("Complement was empty for " + current + " with best common " + bestCommon);
+                        }
+
+                        if (cache.get(complement) == null){
+                            stringBitQueue.addFirst(current);
+                            stringBitQueue.addFirst(complement);
+                            continue;
+                        }
+
+//                        System.out.println("First stringbit: " + bestCommon + ", second stringbit: " + complement);
+//                        System.out.println("First null bestcommon: " + (cache.get(bestCommon) == null) + ", second null: " + (cache.get(complement) == null));
+                        DiscretePMF combinedPMF = ConvolutionCalculator.convolvePMFsFFT(cache.get(bestCommon), cache.get(complement));
+                        cache.put(current, combinedPMF);
+                    }
                 }
             }
         }
